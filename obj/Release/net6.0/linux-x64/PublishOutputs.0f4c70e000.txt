@@ -1,0 +1,6 @@
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/CsharpHandlers.deps.json
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/CsharpHandlers.runtimeconfig.json
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/CsharpHandlers.pdb
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/Amazon.Lambda.Core.dll
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/Amazon.Lambda.Serialization.SystemTextJson.dll
+/Users/stian/IdeaProjects/KaggleAutomation/bin/Release/net6.0/publish/CsharpHandlers.dll
