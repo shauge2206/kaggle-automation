@@ -1,5 +1,3 @@
-
-
 service: kaggle-automation
 
 frameworkVersion: '3'
