@@ -1,9 +1,11 @@
 node_modules
+
+#AWS/Serverless
 .serverless
 
+#dotnet
 bin
 obj
 
-
-
+#misc
 .DS_Store
