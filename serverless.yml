@@ -12,3 +12,8 @@ package:
 functions:
   kaggleIntegration:
     handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
+
+    # you can add packaging information here
+    package:
+      artifact: bin/Release/net6.0/hello.zip
+
