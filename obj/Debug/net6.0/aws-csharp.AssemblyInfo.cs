@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CsharpHandlers")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+28fa1aa3b2312a33b845fb4ea9e6db964c0497c6")]
 [assembly: System.Reflection.AssemblyProductAttribute("CsharpHandlers")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CsharpHandlers")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

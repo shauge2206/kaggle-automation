@@ -174,7 +174,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/kaggle-automation/dev/1727634702602-2024-09-29T18:31:42.602Z/hello.zip"
+                "S3Key": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z/hello.zip"
               },
               "Handler": "CsharpHandlers::AwsDotnetCsharp.Handler::Hello",
               "Runtime": "dotnet6",
@@ -334,7 +334,7 @@
       "package": {
         "individually": true,
         "artifactsS3KeyDirname": "serverless/kaggle-automation/dev/code-artifacts",
-        "artifactDirectoryName": "serverless/kaggle-automation/dev/1727634702602-2024-09-29T18:31:42.602Z"
+        "artifactDirectoryName": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -345,7 +345,7 @@
   },
   "package": {
     "individually": true,
-    "artifactDirectoryName": "serverless/kaggle-automation/dev/1727634702602-2024-09-29T18:31:42.602Z",
+    "artifactDirectoryName": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z",
     "artifact": ""
   }
 }
