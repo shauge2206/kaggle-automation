@@ -13,7 +13,6 @@ functions:
   kaggleIntegration:
     handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
 
-    # you can add packaging information here
+    # pre-packaged deployment artifact from dotnet lambda package
     package:
       artifact: bin/Release/net6.0/hello.zip
-
