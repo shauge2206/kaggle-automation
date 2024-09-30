@@ -26,3 +26,4 @@
 /Users/stian/IdeaProjects/KaggleAutomation/obj/Release/net6.0/linux-x64/CsharpHandlers.pdb
 /Users/stian/IdeaProjects/KaggleAutomation/obj/Release/net6.0/linux-x64/aws-csharp.genruntimeconfig.cache
 /Users/stian/IdeaProjects/KaggleAutomation/obj/Release/net6.0/linux-x64/ref/CsharpHandlers.dll
+/Users/stian/IdeaProjects/KaggleAutomation/obj/Release/net6.0/linux-x64/aws-csharp.sourcelink.json

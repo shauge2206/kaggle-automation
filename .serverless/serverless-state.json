@@ -174,7 +174,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z/hello.zip"
+                "S3Key": "serverless/kaggle-automation/dev/1727683588289-2024-09-30T08:06:28.289Z/kaggleIntegration.zip"
               },
               "Handler": "CsharpHandlers::AwsDotnetCsharp.Handler::Hello",
               "Runtime": "dotnet6",
@@ -192,14 +192,14 @@
               "KaggleIntegrationLogGroup"
             ]
           },
-          "KaggleIntegrationLambdaVersion0ezGINJVJYQUsAuGvgAwN8vM82LB7XOBBMYetpkUww": {
+          "KaggleIntegrationLambdaVersionwqGESqIijlPGfJtyHkGSsB7l5gGBX216CKzUpLQYygM": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "KaggleIntegrationLambdaFunction"
               },
-              "CodeSha256": "k9ZVz7DBqQ61d9quGyD10G8N/EKC8aAG6vXPPjzLK/Q="
+              "CodeSha256": "ghd+uQzpAKkVOf2KdGIWNOSSB2KpfDBcs6SUAtNcL4M="
             }
           }
         },
@@ -215,7 +215,7 @@
           "KaggleIntegrationLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "KaggleIntegrationLambdaVersion0ezGINJVJYQUsAuGvgAwN8vM82LB7XOBBMYetpkUww"
+              "Ref": "KaggleIntegrationLambdaVersionwqGESqIijlPGfJtyHkGSsB7l5gGBX216CKzUpLQYygM"
             },
             "Export": {
               "Name": "sls-kaggle-automation-dev-KaggleIntegrationLambdaFunctionQualifiedArn"
@@ -311,16 +311,16 @@
     "functions": {
       "kaggleIntegration": {
         "handler": "CsharpHandlers::AwsDotnetCsharp.Handler::Hello",
-        "package": {
-          "artifact": "bin/Release/net6.0/hello.zip"
-        },
         "events": [],
         "name": "kaggle-automation-dev-kaggleIntegration",
+        "package": {
+          "artifact": "/Users/stian/IdeaProjects/KaggleAutomation/.serverless/kaggleIntegration.zip"
+        },
         "memory": 1024,
         "timeout": 6,
         "runtime": "dotnet6",
         "vpc": {},
-        "versionLogicalId": "KaggleIntegrationLambdaVersion0ezGINJVJYQUsAuGvgAwN8vM82LB7XOBBMYetpkUww"
+        "versionLogicalId": "KaggleIntegrationLambdaVersionwqGESqIijlPGfJtyHkGSsB7l5gGBX216CKzUpLQYygM"
       }
     },
     "configValidationMode": "warn",
@@ -334,7 +334,7 @@
       "package": {
         "individually": true,
         "artifactsS3KeyDirname": "serverless/kaggle-automation/dev/code-artifacts",
-        "artifactDirectoryName": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z"
+        "artifactDirectoryName": "serverless/kaggle-automation/dev/1727683588289-2024-09-30T08:06:28.289Z"
       },
       "functions": {
         "$ref": "$[\"service\"][\"functions\"]"
@@ -345,7 +345,7 @@
   },
   "package": {
     "individually": true,
-    "artifactDirectoryName": "serverless/kaggle-automation/dev/1727680081513-2024-09-30T07:08:01.513Z",
+    "artifactDirectoryName": "serverless/kaggle-automation/dev/1727683588289-2024-09-30T08:06:28.289Z",
     "artifact": ""
   }
 }
