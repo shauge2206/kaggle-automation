@@ -1,5 +1,4 @@
-build & package
-dotnet lambda package --configuration Release --output-package bin/Release/net6.0/hello.zip
+Project needs to be built and packaged into deployment ZIP before using `serverless deploy`
 
-#Run lambda locally
-npx serverless invoke local -f kaggleIntegration
+Build & package
+dotnet lambda package --configuration Release --output-package bin/Release/net6.0/hello.zip
