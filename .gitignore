@@ -1,4 +1,9 @@
 node_modules
+.serverless
+
 bin
 obj
-.serverless
+
+
+
+.DS_Store
