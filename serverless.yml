@@ -10,9 +10,26 @@ package:
   individually: true
 
 functions:
-  kaggleIntegration:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
+  kaggleDownload:
+    handler: CsharpHandlers::AwsDotnetCsharp.HandlerFunction::KaggleDownloadAsync
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+          - ssm:DescribeParameters
+        Resource:
+          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/username
+          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/key
+      - Effect: Allow
+        Action:
+          - kms:Decrypt
+        Resource:
+          - arn:aws:kms:us-east-1:767398059620:key/84ecd075-f001-4bb8-abb4-d9670bf40fca
+    environment: # Environment variables specific to this function
+      KAGGLE_USER: "harshitshankhdhar"
+      KAGGLE_DATASET: "imdb-dataset-of-top-1000-movies-and-tv-shows"
+      KAGGLE_BASE_URL: "https://www.kaggle.com/api/v1"
 
     # pre-packaged deployment artifact from dotnet lambda package
     package:
-      artifact: bin/Release/net6.0/hello.zip
+      artifact: bin/Release/net6.0/kaggle.zip
