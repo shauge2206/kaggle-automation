@@ -8,3 +8,4 @@ Build & package
 #Serverless commands
 
 npx sls invoke -f kaggleDownload
+npx sls deploy --function kaggleDownload
