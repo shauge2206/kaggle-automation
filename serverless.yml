@@ -5,14 +5,54 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: dotnet6
+  stage: ${opt:stage, 'dev'}
+
+plugins:
+  - serverless-iam-roles-per-function
 
 package:
   individually: true
 
 functions:
-  kaggleIntegration:
-    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Hello
-
-    # pre-packaged deployment artifact from dotnet lambda package
+  kaggleDownload:
+    description: Downloads IMDB dataset from Kaggle and uploads it to S3. 
+    handler: CsharpHandlers::functions.kaggle.HandlerFunction::KaggleDownload
     package:
-      artifact: bin/Release/net6.0/hello.zip
+      artifact: bin/Release/net6.0/kaggle.zip
+    events:
+      - schedule:
+          rate: rate(30 minutes)
+          enabled: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+          - ssm:DescribeParameters
+        Resource:
+          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/username
+          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/key
+      - Effect: Allow
+        Action:
+          - kms:Decrypt
+        Resource:
+          - arn:aws:kms:us-east-1:767398059620:key/84ecd075-f001-4bb8-abb4-d9670bf40fca
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource:
+          - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}/*
+    environment:
+      KAGGLE_DATASET_USER: "harshitshankhdhar"
+      KAGGLE_DATASET: "imdb-dataset-of-top-1000-movies-and-tv-shows"
+      KAGGLE_BASE_URL: "https://www.kaggle.com/api/v1"
+      KAGGLE_PERSONAL_USERNAME: ${ssm:/kaggle/username}
+      KAGGLE_PERSONAL_KEY: ${ssm:/kaggle/key}
+      S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
+      CONSTANT_UPLOAD_FILE_KEY: "kaggle"
+
+resources:
+  Resources:
+    Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:service}-kaggle-bucket-${self:provider.stage}
