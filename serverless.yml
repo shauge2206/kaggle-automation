@@ -6,6 +6,10 @@ provider:
   name: aws
   runtime: dotnet6
   stage: ${opt:stage, 'dev'}
+  environment:
+    S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
+    BASE_UPLOAD_FILE_KEY: "kaggle"
+
 
 plugins:
   - serverless-iam-roles-per-function
@@ -43,11 +47,10 @@ functions:
       KAGGLE_BASE_URL: "https://www.kaggle.com/api/v1"
       KAGGLE_PERSONAL_USERNAME: ${ssm:/kaggle/username}
       KAGGLE_PERSONAL_KEY: ${ssm:/kaggle/key}
-      S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
-      BASE_UPLOAD_FILE_KEY: "kaggle"
+      
 
   dataCleansing:
-    description: Fetch kaggle.csv from S3 bucket, apply cleansing operations, then reupload.
+    description: Fetch kaggle.zip from S3 bucket,unzip, apply cleansing operations, then re-zip eupload with new name.
     handler: CsharpHandlers::functions.csv.HandlerFunction::DataCleansing
     package:
       artifact: bin/Release/net6.0/cleansing.zip
@@ -61,8 +64,6 @@ functions:
           - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}/*
           - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}
     environment:
-      S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
-      BASE_UPLOAD_FILE_KEY: "kaggle"
       ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
 resources:
