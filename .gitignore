@@ -6,6 +6,7 @@ node_modules
 #dotnet
 bin
 obj
+.sln
 
 #misc
 .DS_Store

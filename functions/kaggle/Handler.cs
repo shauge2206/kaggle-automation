@@ -40,7 +40,7 @@ public class HandlerFunction
   {
     string url = $"{BaseUrl}/datasets/download/{KaggleUserSlug}/{KaggleDatasetSlug}";
     HttpResponseMessage response = await client.GetAsync(url);
-    using var memoryStream = await CopyReponseToMemoryStream(response);
+    using MemoryStream memoryStream = await CopyReponseToMemoryStream(response);
 
     return await PutFileS3(memoryStream, OutputFileName);
   }
