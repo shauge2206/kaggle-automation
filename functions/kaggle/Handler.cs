@@ -3,20 +3,19 @@ using System.Text;
 using Amazon.S3;
 using Amazon.S3.Model;
 
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
-
 namespace functions.kaggle;
 public class HandlerFunction
 {
   private static readonly string S3BucketName = Environment.GetEnvironmentVariable("S3_BUCKET");
-  private static readonly string S3FileKey = Environment.GetEnvironmentVariable("CONSTANT_UPLOAD_FILE_KEY");
   private static readonly string KaggleUserSlug = Environment.GetEnvironmentVariable("KAGGLE_DATASET_USER");
   private static readonly string KaggleDatasetSlug = Environment.GetEnvironmentVariable("KAGGLE_DATASET");
   private static readonly string BaseUrl = Environment.GetEnvironmentVariable("KAGGLE_BASE_URL");
   private static readonly string KagglePersonalUser = Environment.GetEnvironmentVariable("KAGGLE_PERSONAL_USERNAME");
   private static readonly string KagglePersonalKey = Environment.GetEnvironmentVariable("KAGGLE_PERSONAL_KEY");
+  private static readonly string OutputFileName;
   private static readonly HttpClient client;
   private static readonly AmazonS3Client s3Client;
+
 
   public async Task<string> KaggleDownload()
   {
@@ -27,12 +26,13 @@ public class HandlerFunction
 
     using var memoryStream = await CopyContentToMemoryStream(response);
 
-    return await UploadStreamToS3(memoryStream);
+    return await PutFileS3(memoryStream, OutputFileName);
   }
   // Static constructor for initializing static resources once, when the class is first loaded
   static HandlerFunction()
   {
-
+    string BaseFileKey = Environment.GetEnvironmentVariable("BASE_UPLOAD_FILE_KEY");
+    OutputFileName = $"{BaseFileKey}.zip";
     client = new HttpClient();
     s3Client = new AmazonS3Client();
   }
@@ -58,7 +58,6 @@ public class HandlerFunction
     if (response.IsSuccessStatusCode) return;
 
     string errorContent = await response.Content.ReadAsStringAsync();
-
     Console.WriteLine($"Error Response Content: {errorContent}");
 
     throw new HttpRequestException($"Request to Kaggle API failed with status code {response.StatusCode} for URL: {response.RequestMessage.RequestUri}. Error Content: {errorContent}");
@@ -72,22 +71,22 @@ public class HandlerFunction
 
     return memoryStream;
   }
-  private async Task<string> UploadStreamToS3(Stream stream)
-  {
 
+  private async Task<string> PutFileS3(Stream stream, string fileName)
+  {
     try
     {
       var request = new PutObjectRequest
       {
         BucketName = S3BucketName,
-        Key = S3FileKey,
+        Key = fileName,
         InputStream = stream,
         ContentType = "application/zip"
       };
 
       PutObjectResponse response = await s3Client.PutObjectAsync(request);
       Console.WriteLine($"Successfully uploaded file to S3 with HTTP status code: {response.HttpStatusCode}");
-      return $"Successfully uploaded dataset: '{KaggleDatasetSlug}' to S3 bucket: '{S3BucketName}' with the file key: '{S3FileKey}'.";
+      return $"Successfully uploaded dataset: '{KaggleDatasetSlug}' to S3 bucket: '{S3BucketName}' with the file key: '{fileName}'.";
     }
     catch (AmazonS3Exception ex)
     {

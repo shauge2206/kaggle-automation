@@ -19,10 +19,6 @@ functions:
     handler: CsharpHandlers::functions.kaggle.HandlerFunction::KaggleDownload
     package:
       artifact: bin/Release/net6.0/kaggle.zip
-    events:
-      - schedule:
-          rate: rate(30 minutes)
-          enabled: true
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -48,7 +44,26 @@ functions:
       KAGGLE_PERSONAL_USERNAME: ${ssm:/kaggle/username}
       KAGGLE_PERSONAL_KEY: ${ssm:/kaggle/key}
       S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
-      CONSTANT_UPLOAD_FILE_KEY: "kaggle"
+      BASE_UPLOAD_FILE_KEY: "kaggle"
+
+  dataCleansing:
+    description: Fetch kaggle.csv from S3 bucket, apply cleansing operations, then reupload.
+    handler: CsharpHandlers::functions.csv.HandlerFunction::DataCleansing
+    package:
+      artifact: bin/Release/net6.0/cleansing.zip
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:ListBucket
+        Resource:
+          - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}/*
+          - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}
+    environment:
+      S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
+      BASE_UPLOAD_FILE_KEY: "kaggle"
+      ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
 resources:
   Resources:
