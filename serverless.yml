@@ -10,7 +10,6 @@ provider:
     S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
     BASE_UPLOAD_FILE_KEY: "kaggle"
 
-
 plugins:
   - serverless-iam-roles-per-function
 
