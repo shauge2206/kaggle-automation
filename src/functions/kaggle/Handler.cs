@@ -5,7 +5,7 @@ using Amazon.S3.Model;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace functions.kaggle;
+namespace src.functions.kaggle;
 public class HandlerFunction
 {
   private static readonly string S3BucketName = Environment.GetEnvironmentVariable("S3_BUCKET");

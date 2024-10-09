@@ -6,7 +6,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using System.IO.Compression;
 
-namespace functions.csv
+namespace src.functions.csv
 {
   public class HandlerFunction
   {

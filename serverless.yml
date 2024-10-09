@@ -1,6 +1,6 @@
 service: kaggle-automation
 
-frameworkVersion: '3'
+frameworkVersion: "3"
 
 provider:
   name: aws
@@ -18,8 +18,8 @@ package:
 
 functions:
   kaggleDownload:
-    description: Downloads IMDB dataset from Kaggle and uploads it to S3. 
-    handler: CsharpHandlers::functions.kaggle.HandlerFunction::KaggleDownload
+    description: Downloads IMDB dataset from Kaggle and uploads it to S3.
+    handler: CsharpHandlers::src.functions.kaggle.HandlerFunction::KaggleDownload
     package:
       artifact: bin/Release/net6.0/kaggle.zip
     iamRoleStatements:
@@ -46,11 +46,10 @@ functions:
       KAGGLE_BASE_URL: "https://www.kaggle.com/api/v1"
       KAGGLE_PERSONAL_USERNAME: ${ssm:/kaggle/username}
       KAGGLE_PERSONAL_KEY: ${ssm:/kaggle/key}
-      
 
   dataCleansing:
     description: Fetch kaggle.zip from S3 bucket,unzip, apply cleansing operations, then re-zip eupload with new name.
-    handler: CsharpHandlers::functions.csv.HandlerFunction::DataCleansing
+    handler: CsharpHandlers::src.functions.csv.HandlerFunction::DataCleansing
     package:
       artifact: bin/Release/net6.0/cleansing.zip
     iamRoleStatements:
