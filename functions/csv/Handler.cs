@@ -31,6 +31,7 @@ namespace functions.csv
     public async Task<string> DataCleansing()
     {
       GetObjectResponse s3Response = await GetFileS3(InputFileName);
+
       MemoryStream s3ZipAsStream = await S3ToMemoryStream(s3Response);
       MemoryStream extractedZipFileStream = await ExtractZipToStream(s3ZipAsStream, ZipFileExtract);
       MemoryStream modifiedCsvStream = await ModifyCsv(extractedZipFileStream);
@@ -39,7 +40,7 @@ namespace functions.csv
       return await PutFileS3(outputFile, OutputFileName);
     }
 
-
+    
     // Proabably able to combine with CopyContent.. method in kaggle Lambda
     public async Task<MemoryStream> S3ToMemoryStream(GetObjectResponse response)
     {
