@@ -1,89 +1,41 @@
-using System;
 using System.Text;
-using Amazon.S3;
-using Amazon.S3.Model;
 using CsvHelper;
 using CsvHelper.Configuration;
-using System.IO.Compression;
+using src.services;
+using Amazon.S3.Model;
+using src.functions.utils;
+using System.Text.RegularExpressions;
 
 namespace src.functions.csv
 {
   public class HandlerFunction
   {
-    private static readonly string S3BucketName = Environment.GetEnvironmentVariable("S3_BUCKET");
     private static readonly string ZipFileExtract = Environment.GetEnvironmentVariable("ORIGINAL_FILE_NAME");
+    private static readonly string BaseFileKey = Environment.GetEnvironmentVariable("BASE_UPLOAD_FILE_KEY");
     private static readonly string InputFileName;
     private static readonly string OutputFileName;
     private static readonly string newCsvFileName;
-    private static readonly AmazonS3Client s3Client;
 
     // Static constructor for initializing static resources once, when the class is first loaded
     static HandlerFunction()
     {
-      string BaseFileKey = Environment.GetEnvironmentVariable("BASE_UPLOAD_FILE_KEY");
       InputFileName = $"{BaseFileKey}.zip";
       OutputFileName = $"{BaseFileKey}-cleaned.zip";
       newCsvFileName = $"cleaned-{ZipFileExtract}";
-      s3Client = new AmazonS3Client();
     }
 
 
     public async Task<string> DataCleansing()
     {
-      GetObjectResponse s3Response = await GetFileS3(InputFileName);
-
-      MemoryStream s3ZipAsStream = await S3ToMemoryStream(s3Response);
-      MemoryStream extractedZipFileStream = await ExtractZipToStream(s3ZipAsStream, ZipFileExtract);
+      GetObjectResponse s3Response = await Aws.GetFileS3(InputFileName);
+      MemoryStream s3ZipAsStream = await Utils.S3ToMemoryStream(s3Response);
+      MemoryStream extractedZipFileStream = await Utils.ExtractZipToStream(s3ZipAsStream, ZipFileExtract);
       MemoryStream modifiedCsvStream = await ModifyCsv(extractedZipFileStream);
-      MemoryStream outputFile = await CompressStreamToZip(modifiedCsvStream, newCsvFileName);
+      MemoryStream outputFile = await Utils.CompressStreamToZip(modifiedCsvStream, newCsvFileName);
 
-      return await PutFileS3(outputFile, OutputFileName);
+      return await Aws.PutFileS3(outputFile, OutputFileName);
     }
 
-    
-    // Proabably able to combine with CopyContent.. method in kaggle Lambda
-    public async Task<MemoryStream> S3ToMemoryStream(GetObjectResponse response)
-    {
-      MemoryStream memoryStream = new();
-      await response.ResponseStream.CopyToAsync(memoryStream);
-      memoryStream.Position = 0;
-      return memoryStream;
-    }
-
-
-    public async Task<MemoryStream> ExtractZipToStream(Stream zipStream, string fileToBeExtracted)
-    {
-      zipStream.Position = 0;
-      MemoryStream extractedFileStream = new();
-
-      using (ZipArchive archive = new(zipStream, ZipArchiveMode.Read, leaveOpen: true))
-      {
-        var entry = archive.GetEntry(fileToBeExtracted) ?? throw new FileNotFoundException($"File '{ZipFileExtract}' not found in the ZIP archive.");
-
-        using var entryStream = entry.Open();
-        await entryStream.CopyToAsync(extractedFileStream);
-      }
-
-      extractedFileStream.Position = 0;
-      return extractedFileStream;
-    }
-
-
-    private static async Task<MemoryStream> CompressStreamToZip(Stream inputStream, string csvFileName)
-    {
-      inputStream.Position = 0;
-      MemoryStream zipStream = new();
-
-      using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
-      {
-        var zipEntry = archive.CreateEntry(csvFileName, CompressionLevel.Optimal);
-        await using var zipEntryStream = zipEntry.Open();
-        await inputStream.CopyToAsync(zipEntryStream);
-      }
-
-      zipStream.Position = 0;
-      return zipStream;
-    }
 
 
     public async Task<MemoryStream> ModifyCsv(MemoryStream stream)
@@ -98,6 +50,21 @@ namespace src.functions.csv
       foreach (var row in movies)
       {
         row.Runtime = row.Runtime.ToString().Replace(" min", "").Trim();
+        row.Runtime = EnsureThreeDigitRuntime(row.Runtime);
+
+        row.Gross = row.Gross.Replace(",", "");
+        row.Gross = EnsureIntegerOrNull(row.Gross);
+
+        row.No_of_Votes = EnsureIntegerOrNull(row.No_of_Votes);
+
+        row.Meta_score = EnsureIntegerOrNull(row.Meta_score);
+
+        if (!Regex.IsMatch(row.Released_Year, @"^(19|20)\d{2}$"))
+        {
+          row.Released_Year = null;
+        }
+
+        row.IMDB_Rating = EnsureDoubleOrNull(row.IMDB_Rating);
       }
 
       MemoryStream modifiedStream = new();
@@ -113,30 +80,62 @@ namespace src.functions.csv
     }
 
 
-    // Move to service folder later
-    public async Task<GetObjectResponse> GetFileS3(string fileName)
+    // nullable double
+    public static double? EnsureDoubleOrNull(string input)
     {
-      GetObjectRequest request = new() { BucketName = S3BucketName, Key = fileName };
-
-      return await s3Client.GetObjectAsync(request);
+      if (double.TryParse(input, out double parsedValue))
+      {
+        return parsedValue;
+      }
+      else
+      {
+        return null;
+      }
     }
 
-
-    // Move to service folder later
-    private async Task<string> PutFileS3(Stream stream, string fileName)
+    //nullable int
+    public static int? EnsureThreeDigitRuntime(object input)
     {
-      PutObjectRequest request = new()
+      if (input is string runtimeString && Regex.IsMatch(runtimeString, @"^\d{3}$"))
       {
-        BucketName = S3BucketName,
-        Key = fileName,
-        InputStream = stream,
-        ContentType = "application/zip"
-      };
+        return int.Parse(runtimeString); // Convert the valid 3-digit string to an integer.
+      }
 
-      await s3Client.PutObjectAsync(request);
+      return null;
+    }
 
-      Console.WriteLine($"Successfully uploaded '{fileName}' to '{S3BucketName}'.");
-      return $"Successfully uploaded '{fileName}' to '{S3BucketName}'.";
+    //nullable int
+    public static int? EnsureIntegerOrNull(string input)
+    {
+      if (int.TryParse(input, out int result))
+      {
+        return result;
+      }
+      else
+      {
+        return null;
+      }
+
+
+      /*
+      Poster_Link
+      Series_Title
+      Released_Year
+      Certificate
+      Runtime
+      Genre
+      IMDB_Rating
+      Overview
+      Meta_score
+      Director
+      Star1
+      Star2
+      Star3
+      Star4
+      No_of_Votes
+      Gross
+      */
+
     }
   }
 }
