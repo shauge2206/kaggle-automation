@@ -64,6 +64,26 @@ functions:
     environment:
       ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
+  herokuDataInsert:
+    description: Download CSV from S3, accesses Heroku CLI, insert data from CSV to Movies project
+    handler: CsharpHandlers::src.functions.heroku.HandlerFunction::HerokuDataInsert
+    package:
+      artifact: bin/Release/net6.0/heroku.zip
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+        Resource:
+          - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}/*
+      - Effect: Allow
+        Action:
+          - ssm:GetParameter
+        Resource:
+          - arn:aws:ssm:us-east-1:767398059620:parameter/heroku/credentials/movies-database
+    environment:
+      SSM_HEROKU_KEY: "/heroku/credentials/movies-database"
+      ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
+
 resources:
   Resources:
     Bucket:
