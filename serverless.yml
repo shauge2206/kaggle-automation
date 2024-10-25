@@ -5,13 +5,23 @@ frameworkVersion: "3"
 provider:
   name: aws
   runtime: dotnet6
+  region: us-east-1
   stage: ${opt:stage, 'dev'}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource:
+        - arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-kaggleDownload
+        - arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-dataCleansing
+        - arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-herokuDataInsert
   environment:
     S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
     BASE_UPLOAD_FILE_KEY: "kaggle"
 
 plugins:
   - serverless-iam-roles-per-function
+  - serverless-step-functions
 
 package:
   individually: true
@@ -28,13 +38,13 @@ functions:
           - ssm:GetParameter
           - ssm:DescribeParameters
         Resource:
-          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/username
-          - arn:aws:ssm:us-east-1:767398059620:parameter/kaggle/key
+          - arn:aws:ssm:${self:provider.region}:${aws:accountId}:parameter/kaggle/username
+          - arn:aws:ssm:${self:provider.region}:${aws:accountId}:parameter/kaggle/key
       - Effect: Allow
         Action:
           - kms:Decrypt
         Resource:
-          - arn:aws:kms:us-east-1:767398059620:key/84ecd075-f001-4bb8-abb4-d9670bf40fca
+          - arn:aws:kms:${self:provider.region}:${aws:accountId}:key/84ecd075-f001-4bb8-abb4-d9670bf40fca
       - Effect: Allow
         Action:
           - s3:PutObject
@@ -79,10 +89,36 @@ functions:
         Action:
           - ssm:GetParameter
         Resource:
-          - arn:aws:ssm:us-east-1:767398059620:parameter/heroku/credentials/movies-database
+          - arn:aws:ssm:${self:provider.region}:${aws:accountId}:parameter/heroku/credentials/movies-database
     environment:
       SSM_HEROKU_KEY: "/heroku/credentials/movies-database"
       ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
+
+stepFunctions:
+  stateMachines:
+    kaggleAutomationStateMachine:
+      name: ${self:service}-${self:provider.stage}-kaggleAutomationStateMachine
+      definition:
+        Comment: "Step Function for automating CSV downlaod from Kaggle, cleansing data and inserting it into Heroku Postgres with copy SQL command"
+        StartAt: Download
+        States:
+          Download:
+            Type: Task
+            Resource: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-kaggleDownload
+            Next: Cleansing
+
+          Cleansing:
+            Type: Task
+            Resource: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-dataCleansing
+            Next: Heroku
+
+          Heroku:
+            Type: Task
+            Resource: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-herokuDataInsert
+            End: true
+      events:
+        - schedule:
+            rate: rate(2 hours)        
 
 resources:
   Resources:
