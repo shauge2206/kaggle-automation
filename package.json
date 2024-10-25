@@ -11,6 +11,7 @@
   "description": "",
   "devDependencies": {
     "serverless": "^3.39.0",
-    "serverless-iam-roles-per-function": "^3.2.0"
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "serverless-step-functions": "^3.21.1"
   }
 }
