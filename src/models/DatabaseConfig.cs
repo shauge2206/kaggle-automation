@@ -6,7 +6,6 @@ namespace src.models
     public class DatabaseConfig
     {
 
-
         [JsonPropertyName("host")]
         public string Host { get; set; }
 

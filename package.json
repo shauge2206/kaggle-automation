@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "for package in kaggle cleansing heroku; do dotnet lambda package --configuration Release --output-package bin/Release/net6.0/${package}.zip; done && npx sls deploy"
   },
   "keywords": [],
   "author": "",

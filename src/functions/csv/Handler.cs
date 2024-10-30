@@ -4,7 +4,8 @@ using CsvHelper.Configuration;
 using src.services;
 using Amazon.S3.Model;
 using src.functions.utils;
-using System.Text.RegularExpressions;
+using KaggleAutomation.src.models;
+using KaggleAutomation.src.functions.utils;
 
 namespace src.functions.csv
 {
@@ -16,7 +17,6 @@ namespace src.functions.csv
     private static readonly string OutputFileName;
     private static readonly string newCsvFileName;
 
-    // Static constructor for initializing static resources once, when the class is first loaded
     static HandlerFunction()
     {
       InputFileName = $"{BaseFileKey}.zip";
@@ -24,49 +24,42 @@ namespace src.functions.csv
       newCsvFileName = $"cleaned-{ZipFileExtract}";
     }
 
-
     public async Task<string> DataCleansing()
     {
       GetObjectResponse s3Response = await Aws.GetFileS3(InputFileName);
       MemoryStream s3ZipAsStream = await Utils.S3ToMemoryStream(s3Response);
       MemoryStream extractedZipFileStream = await Utils.ExtractZipToStream(s3ZipAsStream, ZipFileExtract);
-      MemoryStream modifiedCsvStream = await ModifyCsv(extractedZipFileStream);
-      MemoryStream outputFile = await Utils.CompressStreamToZip(modifiedCsvStream, newCsvFileName);
+      List<Movie> modifiedMovies = CleanMovies(extractedZipFileStream);
+      MemoryStream modifiedStream = await MoviesToStream(modifiedMovies);
+      MemoryStream outputFile = await Utils.CompressStreamToZip(modifiedStream, newCsvFileName);
 
       return await Aws.PutFileS3(outputFile, OutputFileName);
     }
 
-
-
-    public async Task<MemoryStream> ModifyCsv(MemoryStream stream)
+    public static List<Movie> CleanMovies(MemoryStream stream)
     {
       stream.Position = 0;
 
       using StreamReader reader = new(stream);
       using CsvReader csvReader = new(reader, new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture));
 
-      List<dynamic> movies = csvReader.GetRecords<dynamic>().ToList();
+      List<Movie> movies = csvReader.GetRecords<Movie>().ToList();
 
       foreach (var row in movies)
       {
-        row.Runtime = row.Runtime.ToString().Replace(" min", "").Trim();
-        row.Runtime = EnsureThreeDigitRuntime(row.Runtime);
-
-        row.Gross = row.Gross.Replace(",", "");
-        row.Gross = EnsureIntegerOrNull(row.Gross);
-
-        row.No_of_Votes = EnsureIntegerOrNull(row.No_of_Votes);
-
-        row.Meta_score = EnsureIntegerOrNull(row.Meta_score);
-
-        if (!Regex.IsMatch(row.Released_Year, @"^(19|20)\d{2}$"))
-        {
-          row.Released_Year = null;
-        }
-
-        row.IMDB_Rating = EnsureDoubleOrNull(row.IMDB_Rating);
+        CsvOperations.ProcessRuntime(row);
+        CsvOperations.ProcessGross(row);
+        CsvOperations.ProcessNoOfVotes(row);
+        CsvOperations.ProcessMetaScore(row);
+        CsvOperations.ProcessReleasedYear(row);
+        CsvOperations.ProcessIMDBRating(row);
       }
 
+      return movies;
+    }
+
+    public static async Task<MemoryStream> MoviesToStream(List<Movie> movies)
+    {
       MemoryStream modifiedStream = new();
       using StreamWriter writer = new(modifiedStream, Encoding.UTF8, leaveOpen: true);
       using CsvWriter csvWriter = new(writer, new CsvConfiguration(System.Globalization.CultureInfo.InvariantCulture));
@@ -77,65 +70,6 @@ namespace src.functions.csv
       modifiedStream.Position = 0;
 
       return modifiedStream;
-    }
-
-
-    // nullable double
-    public static double? EnsureDoubleOrNull(string input)
-    {
-      if (double.TryParse(input, out double parsedValue))
-      {
-        return parsedValue;
-      }
-      else
-      {
-        return null;
-      }
-    }
-
-    //nullable int
-    public static int? EnsureThreeDigitRuntime(object input)
-    {
-      if (input is string runtimeString && Regex.IsMatch(runtimeString, @"^\d{3}$"))
-      {
-        return int.Parse(runtimeString); // Convert the valid 3-digit string to an integer.
-      }
-
-      return null;
-    }
-
-    //nullable int
-    public static int? EnsureIntegerOrNull(string input)
-    {
-      if (int.TryParse(input, out int result))
-      {
-        return result;
-      }
-      else
-      {
-        return null;
-      }
-
-
-      /*
-      Poster_Link
-      Series_Title
-      Released_Year
-      Certificate
-      Runtime
-      Genre
-      IMDB_Rating
-      Overview
-      Meta_score
-      Director
-      Star1
-      Star2
-      Star3
-      Star4
-      No_of_Votes
-      Gross
-      */
-
     }
   }
 }

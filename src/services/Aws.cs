@@ -45,7 +45,6 @@ namespace src.services
         public static async Task<string> GetSSM(string keyName = null)
         {
             keyName ??= SSM_HEROKU_KEY;
-            Console.WriteLine(keyName);
             var request = new GetParameterRequest
             {
                 Name = keyName,

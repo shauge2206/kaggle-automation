@@ -2,7 +2,6 @@
 
 using System.Text.Json;
 using Amazon.S3.Model;
-using Amazon.SimpleSystemsManagement;
 using Npgsql;
 using src.functions.utils;
 using src.models;
@@ -13,21 +12,21 @@ public class HandlerFunction
 {
     private static readonly string BaseFileKey = Environment.GetEnvironmentVariable("BASE_UPLOAD_FILE_KEY");
     private static readonly string ZipFileExtract = Environment.GetEnvironmentVariable("ORIGINAL_FILE_NAME");
-    private static readonly string SSM_HEROKU_KEY = Environment.GetEnvironmentVariable("SSM_HEROKU_KEY");
     private static readonly string InputFileName;
     private static readonly string csvFileName;
-    private static readonly AmazonSimpleSystemsManagementClient ssmClient;
+    private static string CopyCommand;
     static HandlerFunction()
     {
         InputFileName = $"{BaseFileKey}-cleaned.zip";
         csvFileName = $"cleaned-{ZipFileExtract}";
-        ssmClient = new AmazonSimpleSystemsManagementClient();
+        CopyCommand = @"COPY movie (poster_link, title, released_year, certificate, runtime, genre, 
+                        imdb_rating, overview, meta_score, director, actor1, actor2, actor3, actor4, 
+                        number_of_votes, gross_income) FROM STDIN WITH (FORMAT csv, HEADER true)";
     }
     public async Task<string> HerokuDataInsert()
     {
 
         GetObjectResponse s3Response = await Aws.GetFileS3(InputFileName);
-
 
         MemoryStream s3ZipAsStream = await Utils.S3ToMemoryStream(s3Response);
         MemoryStream csv = await Utils.ExtractZipToStream(s3ZipAsStream, csvFileName);
@@ -43,31 +42,9 @@ public class HandlerFunction
         try
         {
 
-            using (var deleteCommand = new NpgsqlCommand("DELETE FROM movie", connection, transaction))
-            {
-                await deleteCommand.ExecuteNonQueryAsync();
-            }
+            await ClearMovieTable(connection, transaction);
 
-            using var writer = connection.BeginTextImport("COPY movie (poster_link, title, released_year, certificate, runtime, genre, imdb_rating, overview, meta_score, director, actor1, actor2, actor3, actor4, number_of_votes, gross_income) FROM STDIN WITH (FORMAT csv, HEADER true)");
-
-            using var reader = new StreamReader(csv);
-
-            string line;
-            while ((line = await reader.ReadLineAsync()) != null)
-            {
-
-                try
-                {
-                    await writer.WriteLineAsync(line);  // Write each line from the CSV into the database
-                }
-                catch (System.Exception)
-                {
-                    throw;
-                }
-
-            }
-
-            await writer.DisposeAsync();  // Finalize the COPY command
+            await ImportCsvToDatabase(connection, CopyCommand, csv);
 
             await transaction.CommitAsync();
 
@@ -79,6 +56,24 @@ public class HandlerFunction
             throw;
         }
 
+    }
+
+    public static async Task ImportCsvToDatabase(NpgsqlConnection connection, string copyCommand, MemoryStream csv)
+    {
+        await using var writer = connection.BeginTextImport(copyCommand);
+        using var reader = new StreamReader(csv);
+
+        string line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            await writer.WriteLineAsync(line);
+        }
+    }
+
+    private static async Task ClearMovieTable(NpgsqlConnection connection, NpgsqlTransaction transaction)
+    {
+        using var deleteCommand = new NpgsqlCommand("DELETE FROM movie", connection, transaction);
+        await deleteCommand.ExecuteNonQueryAsync();
     }
 
 }
