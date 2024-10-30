@@ -29,7 +29,6 @@ public class HandlerFunction
     client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authToken);
   }
 
-
   public async Task<string> KaggleDownload()
   {
     string url = $"{BaseUrl}/datasets/download/{KaggleUserSlug}/{KaggleDatasetSlug}";

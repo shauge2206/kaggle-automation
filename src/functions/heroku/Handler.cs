@@ -1,5 +1,3 @@
-
-
 using System.Text.Json;
 using Amazon.S3.Model;
 using Npgsql;
@@ -23,9 +21,9 @@ public class HandlerFunction
                         imdb_rating, overview, meta_score, director, actor1, actor2, actor3, actor4, 
                         number_of_votes, gross_income) FROM STDIN WITH (FORMAT csv, HEADER true)";
     }
+
     public async Task<string> HerokuDataInsert()
     {
-
         GetObjectResponse s3Response = await Aws.GetFileS3(InputFileName);
 
         MemoryStream s3ZipAsStream = await Utils.S3ToMemoryStream(s3Response);
@@ -55,7 +53,6 @@ public class HandlerFunction
             await transaction.RollbackAsync();
             throw;
         }
-
     }
 
     public static async Task ImportCsvToDatabase(NpgsqlConnection connection, string copyCommand, MemoryStream csv)
@@ -75,5 +72,4 @@ public class HandlerFunction
         using var deleteCommand = new NpgsqlCommand("DELETE FROM movie", connection, transaction);
         await deleteCommand.ExecuteNonQueryAsync();
     }
-
 }

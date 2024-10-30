@@ -11,8 +11,6 @@ namespace src.services
         private static readonly string SSM_HEROKU_KEY = Environment.GetEnvironmentVariable("SSM_HEROKU_KEY");
         private static readonly AmazonSimpleSystemsManagementClient ssmClient;
         private static readonly AmazonS3Client s3Client;
-
-
         static Aws()
         {
             s3Client = new AmazonS3Client();
