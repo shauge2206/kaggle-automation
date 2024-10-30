@@ -16,7 +16,6 @@ public class HandlerFunction
   private static readonly string OutputFileName;
   private static readonly HttpClient client;
 
-  // Static constructor for initializing static resources once, when the class is first loaded
   static HandlerFunction()
   {
     string BaseFileKey = Environment.GetEnvironmentVariable("BASE_UPLOAD_FILE_KEY");
@@ -24,8 +23,6 @@ public class HandlerFunction
     client = new HttpClient();
   }
 
-
-  // Actual instance constructor
   public HandlerFunction()
   {
     var authToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{KagglePersonalUser}:{KagglePersonalKey}"));

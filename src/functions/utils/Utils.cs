@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 using Amazon.S3.Model;
 
 namespace src.functions.utils
@@ -55,6 +56,40 @@ namespace src.functions.utils
 
             zipStream.Position = 0;
             return zipStream;
+        }
+
+        public static string EnsureDoubleOrNull(string input)
+        {
+            if (double.TryParse(input, out _))
+            {
+                return input;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static string EnsureThreeDigitRuntime(string input)
+        {
+            if (input is string runtimeString && Regex.IsMatch(runtimeString, @"^\d{3}$"))
+            {
+                return runtimeString;
+            }
+
+            return null;
+        }
+
+        public static string EnsureOnlyDigitsOrNull(string input)
+        {
+            if (!string.IsNullOrEmpty(input) && input.All(char.IsDigit))
+            {
+                return input;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

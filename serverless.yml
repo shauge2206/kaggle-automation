@@ -18,6 +18,7 @@ provider:
   environment:
     S3_BUCKET: ${self:service}-kaggle-bucket-${self:provider.stage}
     BASE_UPLOAD_FILE_KEY: "kaggle"
+    ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
 plugins:
   - serverless-iam-roles-per-function
@@ -71,8 +72,6 @@ functions:
         Resource:
           - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}/*
           - arn:aws:s3:::${self:service}-kaggle-bucket-${self:provider.stage}
-    environment:
-      ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
   herokuDataInsert:
     description: Download CSV from S3, accesses Heroku CLI, insert data from CSV to Movies project
@@ -92,7 +91,6 @@ functions:
           - arn:aws:ssm:${self:provider.region}:${aws:accountId}:parameter/heroku/credentials/movies-database
     environment:
       SSM_HEROKU_KEY: "/heroku/credentials/movies-database"
-      ORIGINAL_FILE_NAME: "imdb_top_1000.csv"
 
 stepFunctions:
   stateMachines:
@@ -116,9 +114,10 @@ stepFunctions:
             Type: Task
             Resource: arn:aws:lambda:${self:provider.region}:${aws:accountId}:function:${self:service}-${self:provider.stage}-herokuDataInsert
             End: true
+      
       events:
         - schedule:
-            rate: rate(2 hours)        
+            rate: rate(14 days)
 
 resources:
   Resources:
