@@ -53,6 +53,7 @@ namespace src.functions.csv
         CsvOperations.ProcessMetaScore(row);
         CsvOperations.ProcessReleasedYear(row);
         CsvOperations.ProcessIMDBRating(row);
+        CsvOperations.ProcessCertificate(row);
       }
 
       return movies;
